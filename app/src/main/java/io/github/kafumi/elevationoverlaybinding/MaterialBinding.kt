@@ -1,10 +1,14 @@
 package io.github.kafumi.elevationoverlaybinding
 
 import android.content.res.ColorStateList
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.graphics.drawable.ColorDrawable
 import android.view.View
+import androidx.core.graphics.ColorUtils
 import androidx.core.view.ViewCompat
 import androidx.databinding.BindingAdapter
+import com.google.android.material.elevation.ElevationOverlayProvider
 import com.google.android.material.shape.MaterialShapeDrawable
 import com.google.android.material.shape.MaterialShapeUtils
 
@@ -28,7 +32,17 @@ fun View.setElevationWithMaterialOverlay(elevation: Float) {
             originalBackground.elevation = elevation
         }
         else -> {
-            return
+            val overlayProvider = ElevationOverlayProvider(context)
+            if (overlayProvider.isThemeElevationOverlayEnabled) {
+                doOnAttachedToWindow {
+                    val overlayColor = overlayProvider.themeElevationOverlayColor
+                    val absoluteElevation = this.elevation + parentAbsoluteElevation
+                    val overlayAlpha = overlayProvider.calculateOverlayAlpha(absoluteElevation)
+                    val overlay = ColorUtils.setAlphaComponent(overlayColor, overlayAlpha)
+                    background.colorFilter =
+                        PorterDuffColorFilter(overlay, PorterDuff.Mode.SRC_ATOP)
+                }
+            }
         }
     }
 }
